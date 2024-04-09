@@ -217,14 +217,20 @@ class Circuit(Document):
         sfg = dill.loads(self.sfg)
 
         # Compute the transfer function.
-        sympy_expression, _ = mason.transfer_function(
+        sympy_expression, tf_lg = mason.transfer_function(
             sfg, input_node, output_node
         )
+        print("\ntf sympy")
+        print(sympy_expression)
+        print("\ntf lg sympy")
+        print(tf_lg)
 
         # Substitute all terms for their numerical values except the frequency.
         lambda_function = sympy_expression.subs(
             {k: v for k, v in self.parameters.items() if k != 'f'}
         )
+        print("\ntf lambda")
+        print(lambda_function)
 
         # Compile symbolic expression into lambda function for numerical
         # computations.
@@ -283,6 +289,9 @@ class Circuit(Document):
 
         if factor:
             sympy_expression = sympy_expression.factor()
+
+        print("\ntf lambda expr:")
+        print(str(sympy_expression))
 
         return sympy.latex(sympy_expression) if latex \
             else str(sympy_expression)
@@ -343,6 +352,8 @@ class Circuit(Document):
             raise ValueError('Invalid frequency unit.')
 
         output = lambda_function(s)
+        print("\ntransfer fxn output")
+        print(output)
 
         # If the output is not the same length as the frequency array, then
         # it does not depend on the input, in which case we must pad it.
@@ -384,10 +395,33 @@ class Circuit(Document):
         # Compute the loop gain function.
         sympy_expression = mason.loop_gain(sfg)
 
+        print("\nlg sympy")
+        print(sympy_expression)
+        """
+        in 10.4 example, lg = 1-tf_denominator = tf_lg
+        lg expression:
+            -G_M1/(C3*s + 1/R_O_M1 + 1/R2 + 1/R1) - G_M2*(G_M1 + 1/R_O_M1)/
+            (R2*(C1*s + 1/R_O_M1 + 1/R3)*(C2*s + 1/R_O_M2 + 1/R4 + 1/R2)*
+            (C3*s + 1/R_O_M1 + 1/R2 + 1/R1)) + (G_M1 + 1/R_O_M1)/(R_O_M1*
+            (C1*s + 1/R_O_M1 + 1/R3)*(C3*s + 1/R_O_M1 + 1/R2 + 1/R1)) + 
+    --->       1/(R2**2*(C2*s + 1/R_O_M2
+        tf lg:
+            -G_M1/(C3*s + 1/R_O_M1 + 1/R2 + 1/R1) - G_M2*(G_M1 + 1/R_O_M1)/
+            (R2*(C1*s + 1/R_O_M1 + 1/R3)*(C2*s + 1/R_O_M2 + 1/R4 + 1/R2)*
+            (C3*s + 1/R_O_M1 + 1/R2 + 1/R1)) + (G_M1 + 1/R_O_M1)/(R_O_M1*
+            (C1*s + 1/R_O_M1 + 1/R3)*(C3*s + 1/R_O_M1 + 1/R2 + 1/R1)) + 
+    --->       1/(R2**2*(C2*s + 1/R_O_M2 + 1/R4 + 1/R2)*(C3*s + 1/R_O_M1 + 1/R2 + 1/R1))
+                                         -----------------------------------------------
+
+        """
+
         # Substitute all terms for their numerical values except the frequency.
         lambda_function = sympy_expression.subs(
             {k: v for k, v in self.parameters.items() if k != 'f'}
         )
+
+        print("\nlg lambda")
+        print(lambda_function)
 
         # Compile symbolic expression into lambda function for numerical
         # computations.
@@ -430,6 +464,9 @@ class Circuit(Document):
 
         if factor:
             sympy_expression = sympy_expression.factor()
+        
+        print("\nlg lambda expr:")
+        print(str(sympy_expression))
 
         return sympy.latex(sympy_expression) if latex else str(sympy_expression)
 
@@ -481,6 +518,9 @@ class Circuit(Document):
             raise ValueError('Invalid frequency unit.')
 
         output = lambda_function(s)
+        print("\nlg output")
+        # giving ~ -75V/V, should be ~ -16 V/V
+        print(output)
 
         # If the output is not the same length as the frequency array, then
         # it does not depend on the input, in which case we must pad it.
@@ -506,6 +546,10 @@ class Circuit(Document):
             raise ValueError('Invalid phase unit.')
 
         # Convert numpy arrays to plain python lists.
+        print("\nfrequency:")
+        print(freq.tolist())
+        print("\ngain")
+        print(gain.tolist())
         return freq.tolist(), gain.tolist(), phase.tolist()
     
     def simplify_sfg(self, source, target ):

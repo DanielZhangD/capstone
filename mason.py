@@ -115,6 +115,8 @@ def transfer_function(sfg: nx.DiGraph, input_node: str, output_node: str) \
 
     # Find all simple cycles.
     cycles = [OrderedDict.fromkeys(nodes) for nodes in simple_cycles(sfg)]
+    print("\nTF cycles")
+    print(cycles)
 
     # Find all combinations of non-touching cycles, sorted by combination size.
     cycle_combinations = list(disjoint_combinations(
@@ -129,6 +131,7 @@ def transfer_function(sfg: nx.DiGraph, input_node: str, output_node: str) \
     path_gains = (sympy.Mul.fromiter(sfg.edges[u, v]['weight']
                                      for u, v in pairwise(path))
                   for path in paths)
+    # determs => ∆_k
     determs = (determinant(sfg, cycle_combinations, path) for path in paths)
     numer = sympy.Add.fromiter(
         sympy.Mul(path_gain, determ)
@@ -152,8 +155,14 @@ def loop_gain(sfg: nx.DiGraph) -> sympy.Expr:
         The loop gain expression.
     """
     # Find all simple cycles.
+    """
+     simple cycle: closed path where no node appears twice. In a directed graph, 
+     two simple cycles are distinct if they are not cyclic 
+     permutations of each other
+    """
     cycles = [OrderedDict.fromkeys(nodes) for nodes in simple_cycles(sfg)]
-
+    print("LG cycles")
+    print(cycles)
     # Find all combinations of non-touching cycles, sorted by combination size.
     cycle_combinations = list(disjoint_combinations(
         cycles, key=lambda cycle: cycle.keys()))

@@ -133,6 +133,7 @@ def get_transfer_function(circuit_id):
     # return {'transfer_function': transfer_function}
 
 
+# update this to also call the loop gain bode plot endpoint
 @app.route('/circuits/<circuit_id>/transfer_function/bode', methods=['GET'])
 def get_transfer_function_bode(circuit_id):
     circuit = db.Circuit.objects(id=circuit_id).first()
